@@ -6,7 +6,6 @@ import json
 from unittest.mock import Mock
 
 # Third-Party Libraries
-import dns.rrset
 import pytest
 
 # cisagov Libraries
@@ -60,10 +59,17 @@ def test_parsed_zero_percentage_reaches_json_and_csv(domains, monkeypatch, tmp_p
         "_dmarc.sub.example.test": "v=DMARC1; p=reject; pct=0",
     }
 
+    class TxtRecord:
+        def __init__(self, text):
+            self.text = text
+
+        def to_text(self):
+            return '"' + self.text + '"'
+
     def query(name, record_type, tcp):
         assert record_type == "TXT"
         assert tcp is True
-        return dns.rrset.from_text(name, 60, "IN", "TXT", '"' + records[name] + '"')
+        return [TxtRecord(records[name])]
 
     resolver = Mock()
     resolver.query.side_effect = query
